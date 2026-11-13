@@ -6,7 +6,7 @@
 :root{color-scheme:light;--bg:#f4f6f1;--text:#19281f;--surface:#fff;--card:#eaf2e8;--border:#dce4d9;--field:#aebdaf;--accent:#23543b;--muted:#495c50;--late:#a03824}
 :root[data-theme="yellow"]{--bg:#faf6e8;--text:#30270e;--surface:#fffdf5;--card:#ffefb4;--border:#e6d7a7;--field:#b7a367;--accent:#6f5000;--muted:#635326;--late:#9b3017}
 :root[data-theme="black"]{color-scheme:dark;--bg:#101012;--text:#f1f1f3;--surface:#19191d;--card:#26262d;--border:#3a3a42;--field:#62626e;--accent:#505064;--muted:#c0c0c9;--late:#ff9c8b}
-body{background:var(--bg);color:var(--text)}section,details{background:var(--surface);border-color:var(--border)}.card{background:var(--card)}input,select{background:var(--surface);color:var(--text)}input,select,button{border-color:var(--field)}button{background:var(--accent)}button.secondary{background:var(--surface);color:var(--text)}small,.muted{color:var(--muted)}td,th{border-color:var(--border)}.late{color:var(--late)}.heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+body{background:var(--bg);color:var(--text)}section,details{background:var(--surface);border-color:var(--border)}.card{background:var(--card)}input,select{background:var(--surface);color:var(--text)}input,select,button{border-color:var(--field)}button{background:var(--accent)}button.secondary{background:var(--surface);color:var(--text)}small,.muted{color:var(--muted)}td,th{border-color:var(--border)}.late{color:var(--late)}[hidden]{display:none!important}.heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 @media(max-width:540px){main{padding:14px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.card{padding:10px}.card strong{font-size:21px}section,details{padding:12px}form label{flex:1 1 135px}form input,form select{width:100%;min-width:0}button{min-height:44px}}
 </style>
 <main>
@@ -14,30 +14,30 @@ body{background:var(--bg);color:var(--text)}section,details{background:var(--sur
 <p class="muted" id="today"></p>
 <div class="grid" id="summary"></div>
 <div class="row"><button id="quick-income">＋ Приход</button><button id="quick-expense">− Расход</button><button class="secondary" id="quick-journal">Журнал</button></div>
-<p id="daily"></p>
+<p id="daily"></p><p id="account"></p>
 <p id="status" role="status" aria-live="polite"></p>
 <section id="setup"><h2>Начальные остатки</h2>
 <form id="opening"><label>Всего наличных, ₽<input name="cash" required inputmode="decimal"></label><label>Из них в резерве, ₽<input name="reserve" required inputmode="decimal" value="0"></label><button>Сохранить</button></form>
 <p>Если вы уже вели учёт в старом файле, перенесите копию через раздел «Резервная копия».</p>
 </section>
-<section><h2>Поступления</h2>
+<section id="income-panel" hidden><h2>Приход</h2>
 <form id="income">
-<label>Источник<input name="source" required maxlength="120" list="sources" placeholder="Например, Xbet"></label>
-<datalist id="sources"><option>Xbet</option><option>Футбольная лига</option><option>Другое</option></datalist>
+<label>Источник<input name="source" required maxlength="120" placeholder="Например, зарплата"></label>
+
 <label>Сумма, ₽<input name="amount" required inputmode="decimal"></label>
 <label>Дата<input name="date" type="date" required></label>
 <button name="mode" value="actual">Получено</button><button class="secondary" name="mode" value="expected">Ожидается</button>
 </form>
 <p id="preview" class="muted"></p>
-<p class="muted">Xbet — в среднем 3 241 ₽ за смену, от 3 смен в неделю, наличными в пн/вт следующей недели. Лига — 2 250 ₽ за субботу и за воскресенье, оплата в конце каждого дня. Будущие выплаты можно записывать вручную.</p>
+
 <div id="expected"></div>
 </section>
-<section><h2>Конверты и обязательные платежи</h2>
+<details><summary>Конверты и платежи</summary>
 <p class="muted">Ближайшие сроки и все неоплаченные прошлые месяцы. Отложенные суммы входят в остаток наличных.</p>
 <div id="bills"></div>
 <form id="transfer"><label>Конверт<select name="bucket"></select></label><label>Сумма, ₽<input name="amount" required inputmode="decimal"></label><button name="mode" value="put">Отложить вручную</button><button class="secondary" name="mode" value="take">Вернуть в свободные</button></form>
-</section>
-<section><h2>Расход</h2>
+</details>
+<section id="expense-panel" hidden><h2>Расход</h2>
 <form id="expense">
 <label>Категория<select name="bucket"></select></label><label>Сумма, ₽<input name="amount" required inputmode="decimal"></label><label>Дата<input name="date" type="date" required></label><label>Комментарий<input name="note" maxlength="120"></label><button>Записать расход</button>
 </form>
@@ -45,16 +45,16 @@ body{background:var(--bg);color:var(--text)}section,details{background:var(--sur
 </section>
 <details><summary>Правила распределения</summary>
 <form id="rules">
-<label>Первый приоритет<select name="first"><option value="due">Ближайший срок</option><option value="utilities">Коммунальные и интернет</option><option value="bankruptcy">Банкротство</option><option value="mobile">Мобильная связь</option><option value="reserve">Резерв</option></select></label>
+<label>Первый приоритет<select name="first"><option value="due">Ближайший срок</option><option value="reserve">Резерв</option></select></label>
 <label>В резерв из остатка, %<input name="rate" type="number" min="0" max="100" step="1" required></label>
 <label>Пополнять платежи заранее<select name="horizon"><option value="1">Текущий и следующий месяц</option><option value="0">Только текущий месяц</option><option value="2">До двух месяцев вперёд</option></select></label>
 <button>Сохранить</button>
 </form>
-<p class="muted">Остальные платежи идут по сроку. Если резерв первый, процент считается от всей выплаты. Иначе процент считается после пополнения платежей. Коммунальные до 15-го, банкротство и мобильная связь до конца месяца. Ноябрьское банкротство уже оплачено. Срок мобильной связи принят за конец месяца.</p>
+<p class="muted">Платежи из личной копии пополняются по сроку. Процент резерва можно изменить здесь.</p>
 </details>
 <details id="journal-panel"><summary>Журнал операций</summary><div id="journal"></div><button class="secondary" id="undo">Отменить последнюю запись</button></details>
 <details><summary>Резервная копия</summary>
-<p>Данные хранятся в этом браузере. Скачайте копию перед переносом файла или очисткой данных браузера.</p>
+<p>В Telegram записи хранятся в облаке аккаунта. В обычном браузере записи сохраняются локально.</p>
 <div class="row"><button id="export">Скачать копию</button><label>Файл копии<input id="file" type="file" accept=".json,application/json"></label><button class="secondary" id="import">Заменить данные из копии</button></div>
 </details>
 </main>
@@ -62,7 +62,47 @@ body{background:var(--bg);color:var(--text)}section,details{background:var(--sur
 "use strict";
 window.Telegram?.WebApp?.ready();
 window.Telegram?.WebApp?.expand();
-const KEY = "cash-envelopes-2026-v1";
+const telegram = window.Telegram?.WebApp;
+const userId = telegram?.initDataUnsafe?.user?.id;
+const cloud = userId && telegram.initData && telegram.isVersionAtLeast("6.9") ? telegram.CloudStorage : null;
+const KEY = "cash-envelopes-2026-v1" + (userId ? "-"+userId : "");
+const cloudKey = "finance_snapshot";
+let cloudVersion = null;
+let busy = false;
+let ready = false;
+function cloudCall(method,...args){
+  return new Promise((resolve,reject)=>{
+    cloud[method](...args,(error,value)=>error ? reject(Error("Telegram не смог синхронизировать записи. Повторите попытку.")) : resolve(value));
+  });
+}
+async function readCloud(){
+  const raw=await cloudCall("getItem",cloudKey);
+  if(!raw) return {raw:null,data:initial()};
+  const meta=JSON.parse(raw);
+  check(Number.isInteger(meta.count)&&meta.count>0&&meta.count<=500&&/^[a-z0-9]+$/.test(meta.id),"Повреждена облачная копия.");
+  const keys=Array.from({length:meta.count},(_,i)=>"finance_"+meta.slot+"_"+i);
+  const values=await cloudCall("getItems",keys);
+  const chunks=keys.map(key=>JSON.parse(values[key]));
+  check(chunks.every(chunk=>chunk.id===meta.id),"Записи обновились на другом устройстве. Откройте приложение заново.");
+  return {raw,data:JSON.parse(chunks.map(chunk=>chunk.text).join(""))};
+}
+async function writeCloud(next){
+  const remote=await cloudCall("getItem",cloudKey);
+  check((remote||null)===cloudVersion,"Есть изменения с другого устройства. Откройте приложение заново.");
+  const slot=remote ? 1-JSON.parse(remote).slot : 0;
+  const id=Date.now().toString(36)+Math.random().toString(36).slice(2);
+  const points=Array.from(JSON.stringify(next));
+  const count=Math.ceil(points.length/600);
+  check(count<=500,"Облачное хранилище заполнено. Скачайте резервную копию.");
+  for(let i=0;i<count;i++){
+    const value=JSON.stringify({id,text:points.slice(i*600,(i+1)*600).join("")});
+    check(await cloudCall("setItem","finance_"+slot+"_"+i,value),"Не удалось сохранить данные в Telegram.");
+  }
+  check(((await cloudCall("getItem",cloudKey))||null)===cloudVersion,"Есть изменения с другого устройства. Откройте приложение заново.");
+  const raw=JSON.stringify({id,slot,count});
+  check(await cloudCall("setItem",cloudKey,raw),"Не удалось сохранить данные в Telegram.");
+  cloudVersion=raw;
+}
 const theme = document.getElementById("theme");
 const themeKey = KEY + "-theme";
 function applyTheme(value) {
@@ -75,13 +115,13 @@ theme.addEventListener("change",()=>{
   applyTheme(theme.value);
   try { localStorage.setItem(themeKey,theme.value); } catch {}
 });
-const START = "2026-11-13";
+const START = "2000-01-01";
 const OPENING = 0;
 const RESERVE = 0;
-const GOAL = 30000000;
+let plan = []; let goal;
 const MAX = 100000000000;
 const categories = {food:"Продукты", fun:"Личные удовольствия", transport:"Транспорт", other:"Другое"};
-const names = {utilities:"Коммунальные и интернет", bankruptcy:"Банкротство", mobile:"Мобильная связь", reserve:"Резерв"};
+const names = {reserve:"Резерв"};
 const money = new Intl.NumberFormat("ru-RU",{style:"currency",currency:"RUB",maximumFractionDigits:2,minimumFractionDigits:0});
 const rub = n => money.format(n/100);
 const $ = id => document.getElementById(id);
@@ -97,7 +137,7 @@ function check(ok,message="Некорректные данные операци�
 function validDate(d) {
   return typeof d==="string" && /^20\d\d-\d\d-\d\d$/.test(d) && localDate(new Date(d+"T12:00:00"))===d;
 }
-function actualDate(d) { check(validDate(d)&&d>=START&&d<=now(),"Дата операции должна быть между 13.11.2026 и сегодняшним днём."); }
+function actualDate(d) { check(validDate(d)&&d>=START&&d<=now(),"Дата операции должна быть не позднее сегодняшнего дня."); }
 function validAmount(n) { return Number.isSafeInteger(n)&&n>0&&n<=MAX; }
 function amount(s) {
   const value=String(s).trim().replace(",",".");
@@ -107,30 +147,13 @@ function amount(s) {
   check(validAmount(n),"Сумма вне допустимого диапазона.");
   return n;
 }
-function bill(id) {
-  const match=/^(utilities|bankruptcy|mobile):(20\d\d)-(0[1-9]|1[0-2])$/.exec(id);
-  if(!match) return null;
-  const [,type,y,m]=match;
-  const period=y+"-"+m;
-  if(period<"2026-11" || (type==="bankruptcy"&&(period<"2026-12"||period>"2027-10"))) return null;
-  const day=type==="utilities"?15:new Date(Number(y),Number(m),0).getDate();
-  return {id,type,period,due:period+"-"+day,total:{utilities:600000,bankruptcy:1250000,mobile:20000}[type]};
-}
+function bill(id) { return plan.find(item=>item.id===id); }
 function listBills(date,horizon) {
-  const result=[];
-  const end=month(date,horizon);
-  for(let i=0;month(START,i)<=end;i++){
-    const period=month(START,i);
-    for(const type of ["utilities","bankruptcy","mobile"]){
-      const item=bill(type+":"+period);
-      if(item) result.push(item);
-    }
-  }
-  return result.sort((a,b)=>a.due.localeCompare(b.due));
+  return plan.filter(item=>item.period<=month(date,horizon)).sort((a,b)=>a.due.localeCompare(b.due));
 }
 function label(id) {
   const item=bill(id);
-  return item ? names[item.type]+" · "+item.period.split("-").reverse().join(".") : names[id]||categories[id];
+  return item ? item.title+" · "+item.period.split("-").reverse().join(".") : names[id]||categories[id];
 }
 
 const defaults = {first:"due",rate:0,horizon:1};
@@ -140,7 +163,7 @@ const paid = (s,id) => s.paid[id]||0;
 const free = s => s.cash-Object.values(s.buckets).reduce((a,b)=>a+b,0);
 const outstanding = (s,b) => b.total-paid(s,b.id);
 function room(s,id) {
-  if(id==="reserve") return Math.max(0,GOAL-balance(s,id));
+  if(id==="reserve") return Math.max(0,goal-balance(s,id));
   const item=bill(id);
   check(item,"Конверт не найден.");
   return outstanding(s,item)-balance(s,id);
@@ -162,13 +185,24 @@ function split(s,n,date) {
 }
 function replay(data) {
   check(data && data.version===1 && Array.isArray(data.events),"Формат копии не поддерживается.");
+  plan = data.plan || [];
+  goal = data.goal ?? MAX;
+  check(Number.isSafeInteger(goal) && goal>0 && goal<=MAX);
+  check(Array.isArray(plan) && plan.length<=2000);
+  const billIds=new Set();
+  for(const item of plan){
+    check(item && typeof item.id==="string" && item.id===item.type+":"+item.period &&
+      /^[a-z]+$/.test(item.type) && validDate(item.due) && item.due.slice(0,7)===item.period &&
+      validAmount(item.total) && typeof item.title==="string" && item.title.length<=120 && !billIds.has(item.id));
+    billIds.add(item.id);
+  }
   const base=data.base || {cash:OPENING,reserve:RESERVE}; 
   check(Number.isSafeInteger(base.cash)&&Number.isSafeInteger(base.reserve)&&base.cash>=base.reserve&&base.reserve>=0&&base.cash<=MAX);
   const s={cash:base.cash,buckets:Object.assign(Object.create(null),{reserve:base.reserve}),paid:Object.create(null),expected:new Map([]),ids:new Set([]),rules:{...defaults},log:[]};
   for(const e of data.events){
     check(e && typeof e==="object" && typeof e.type==="string");
     if(e.type==="rules"){
-      check(["due","utilities","bankruptcy","mobile","reserve"].includes(e.first)&&Number.isInteger(e.rate)&&e.rate>=0&&e.rate<=100&&[0,1,2].includes(e.horizon));
+      check((e.first==="due"||e.first==="reserve"||plan.some(item=>item.type===e.first))&&Number.isInteger(e.rate)&&e.rate>=0&&e.rate<=100&&[0,1,2].includes(e.horizon));
       s.rules={first:e.first,rate:e.rate,horizon:e.horizon};
       continue;
     }
@@ -234,25 +268,30 @@ function describe(allocations,left) {
 }
 let data=initial(), state, loadError=false;
 try {
-  const stored=localStorage.getItem(KEY);
+  const stored=userId ? null : localStorage.getItem(KEY);
   if(stored!==null){const parsed=JSON.parse(stored); replay(parsed); data=parsed;}
 }catch(error){loadError=true;}
 state=replay(data);
 function status(message,error=false){ $("status").textContent=message; $("status").className=error?"late":""; }
-function save(next,replacing=false) {
+async function save(next,replacing=false) {
+  check(ready && !busy,"Дождитесь синхронизации.");
+  busy=true;
+  try {
   check(!loadError||replacing,"Хранилище не прочитано. Восстановите данные из копии.");
   const updated=replay(next);
-  localStorage.setItem(KEY,JSON.stringify(next));
+  if(cloud) await writeCloud(next);
+  else { check(!userId,"Обновите Telegram для синхронизации."); localStorage.setItem(KEY,JSON.stringify(next)); }
   data=next;
   state=updated;
   loadError=false;
   render();
+  } finally { busy=false; }
 }
-function commit(e,message){
-  save({...data,events:[...data.events,e]});
+async function commit(e,message){
+  await save({...data,events:[...data.events,e]});
   status(message);
 }
-function attempt(fn){try{fn();}catch(error){status(error.message,true);}}
+async function attempt(fn){try{await fn();}catch(error){state=replay(data);status(error.message,true);}}
 function table(head,rows){
   return '<div class="table"><table><thead><tr>'+head.map(x=>"<th>"+x+"</th>").join("")+"</tr></thead><tbody>"+rows.map(row=>"<tr>"+row.map(x=>"<td>"+x+"</td>").join("")+"</tr>").join("")+"</tbody></table></div>";
 }
@@ -265,9 +304,9 @@ function render(){
   const s=state;
   $("setup").hidden=Boolean(data.base || data.events.length);
   const date=now();
-  $("today").textContent="Сегодня "+dateLabel(date)+" · учёт с 13.11.2026";
+  $("today").textContent="Сегодня "+dateLabel(date)+"";
   $("summary").innerHTML=[
-    ["Всего наличных",s.cash],["Свободно к трате",free(s)],["В конвертах на платежи",s.cash-free(s)-balance(s,"reserve")],["Резерв из "+rub(GOAL),balance(s,"reserve")],["Ожидается",Array.from(s.expected.values()).reduce((sum,e)=>sum+e.amount,0)]
+    ["Всего наличных",s.cash],["Свободно к трате",free(s)],["В конвертах на платежи",s.cash-free(s)-balance(s,"reserve")],[data.goal?"Резерв из "+rub(goal):"Резерв",balance(s,"reserve")],["Ожидается",Array.from(s.expected.values()).reduce((sum,e)=>sum+e.amount,0)]
   ].map(([title,n])=>'<div class="card">'+title+"<strong>"+rub(n)+"</strong></div>").join("");
   const daily = {income:0, expense:0};
   for (const event of data.events) {
@@ -283,33 +322,35 @@ function render(){
   const allBills=listBills(date,Math.max(1,s.rules.horizon));
   const active=allBills.filter(b=>outstanding(s,b)>0);
   const visible=allBills.filter(b=>outstanding(s,b)>0||b.period>=month(date,0));
-  $("bills").innerHTML=table(["Платёж","Срок","К оплате","В конверте","Не хватает"],visible.map(b=>[
-    label(b.id),'<span class="'+(b.due<date&&outstanding(s,b)>0?"late":"")+'">'+dateLabel(b.due)+(b.due<date&&outstanding(s,b)>0?" · просрочен":"")+"</span>",
+  $("bills").innerHTML=visible.length?table(["Платёж","Срок","К оплате","В конверте","Не хватает"],visible.map(b=>[
+    esc(label(b.id)),'<span class="'+(b.due<date&&outstanding(s,b)>0?"late":"")+'">'+dateLabel(b.due)+(b.due<date&&outstanding(s,b)>0?" · просрочен":"")+"</span>",
     rub(outstanding(s,b)),rub(balance(s,b.id)),rub(room(s,b.id))
-  ]));
+  ])):"<p>Платежей пока нет.</p>";
   const billOptions=active.map(b=>[b.id,label(b.id)]);
   options($("transfer").elements.bucket,[["reserve","Резерв"],...billOptions]);
   options($("expense").elements.bucket,[...Object.entries(categories),...billOptions,["reserve","Из резерва"]]);
   const current=month(date,0);
   $("limits").innerHTML=table(["Расходы за "+current.split("-").reverse().join("."),"Потрачено","Остаток плана"],["food","fun","transport"].map(id=>{
     const spent=data.events.filter(e=>e.type==="expense"&&e.bucket===id&&e.date.startsWith(current)).reduce((sum,e)=>sum+e.amount,0);
-    const limit={food:1500000,fun:500000}[id];
+    const limit=data.limits?.[id];
     return [categories[id],rub(spent),limit===undefined?"По факту":spent>limit?"Сверх плана "+rub(spent-limit):rub(limit-spent)];
   }));
   $("journal").innerHTML=table(["Дата","Операция","Сумма и распределение"],[
-    ...s.log.slice().reverse(), [START,"Начальный остаток",rub(data.base?.cash||0)+" · резерв "+rub(data.base?.reserve||0)]
+    ...s.log.slice().reverse(), ["","Начальный остаток",rub(data.base?.cash||0)+" · резерв "+rub(data.base?.reserve||0)]
   ].map(([d,title,info])=>[d?esc(dateLabel(d)):"—",esc(title),esc(info)]));
+  options($("rules").elements.first,[["due","Ближайший срок"],...new Map(plan.map(item=>[item.type,item.title])),["reserve","Резерв"]]);
   for(const [key,value] of Object.entries(s.rules)) $("rules").elements[key].value=value;
-  $("undo").disabled=!data.events.length || (data.events.length===1 && data.events[0].id==="opening-xbet");
+  $("undo").disabled=!data.events.length || (data.events.length===1 && data.events[0].id?.startsWith("opening-"));
   preview();
 }
 $("opening").onsubmit=event=>{
   event.preventDefault();
-  attempt(()=>{
+  const form=event.currentTarget;
+  attempt(async()=>{
     check(!data.base&&!data.events.length,"Начальный остаток уже задан.");
-    const f=fields(event.currentTarget);
+    const f=fields(form);
     const read=value=>/^0(?:[.,]0{1,2})?$/.test(value.trim())?0:amount(value);
-    save({...data,base:{cash:read(f.cash),reserve:read(f.reserve)}});
+    await save({...data,base:{cash:read(f.cash),reserve:read(f.reserve)}});
     status("Начальный остаток сохранён.");
   });
 };
@@ -322,77 +363,81 @@ function preview(){
     $("preview").textContent="Если получить эту сумму: "+describe(result.allocations,result.left)+".";
   }catch{$("preview").textContent="Введите сумму и дату, чтобы увидеть распределение до записи.";}
 }
-function recordIncome(source,n,date,expectedId){
+async function recordIncome(source,n,date,expectedId){
   actualDate(date);
   const result=split(state,n,date);
-  commit({type:"income",source,amount:n,date,expectedId},"Получено "+rub(n)+". "+describe(result.allocations,result.left)+".");
+  await commit({type:"income",source,amount:n,date,expectedId},"Получено "+rub(n)+". "+describe(result.allocations,result.left)+".");
 }
 for(const id of ["income","expense"]) $(""+id).elements.date.value=now();
 $("income").addEventListener("input",preview);
 $("income").onsubmit=event=>{
   event.preventDefault();
-  attempt(()=>{
-    const f=fields(event.currentTarget), n=amount(f.amount), source=f.source.trim();
+  const form=event.currentTarget;
+  attempt(async()=>{
+    const f=fields(form), n=amount(f.amount), source=f.source.trim();
     if(event.submitter.value==="expected"){
       const id=globalThis.crypto?.randomUUID?.()||Date.now()+"-"+Math.random();
-      commit({type:"expect",id,source,amount:n,date:f.date},"Ожидание записано.");
+      await commit({type:"expect",id,source,amount:n,date:f.date},"Ожидание записано.");
     }else{
       const candidates=Array.from(state.expected.values()).filter(e=>e.source.toLocaleLowerCase()===source.toLocaleLowerCase());
       if(candidates.length&&!confirm("Для этого источника есть ожидаемая выплата. Если вы получили именно её, закройте строку в списке ожиданий. Записать отдельное поступление?")) return;
-      recordIncome(source,n,f.date);
+      await recordIncome(source,n,f.date);
     }
-    event.currentTarget.elements.amount.value="";
+    form.elements.amount.value="";
     preview();
   });
 };
 $("expected").onclick=event=>{
   const button=event.target.closest("button[data-action]");
   if(!button) return;
-  attempt(()=>{
+  attempt(async()=>{
     const e=state.expected.get(button.dataset.id);
     check(e,"Выплата уже закрыта.");
     if(button.dataset.action==="cancel"){
-      if(confirm("Убрать выплату из ожидаемых?")) commit({type:"cancel",id:e.id,date:now()},"Ожидание отменено.");
+      if(confirm("Убрать выплату из ожидаемых?")) await commit({type:"cancel",id:e.id,date:now()},"Ожидание отменено.");
     }else{
       const n=amount(button.closest("tr").querySelector("input").value);
       const date=$("income").elements.date.value;
       actualDate(date);
       const result=split(state,n,date);
-      if(confirm("Получено "+rub(n)+" "+dateLabel(date)+"?\n\n"+describe(result.allocations,result.left))) recordIncome(e.source,n,date,e.id);
+      if(confirm("Получено "+rub(n)+" "+dateLabel(date)+"?\n\n"+describe(result.allocations,result.left))) await recordIncome(e.source,n,date,e.id);
     }
   });
 };
 $("transfer").onsubmit=event=>{
   event.preventDefault();
-  attempt(()=>{
-    const f=fields(event.currentTarget);
-    commit({type:event.submitter.value,bucket:f.bucket,amount:amount(f.amount),date:now()},"Перевод записан.");
-    event.currentTarget.elements.amount.value="";
+  const form=event.currentTarget;
+  attempt(async()=>{
+    const f=fields(form);
+    await commit({type:event.submitter.value,bucket:f.bucket,amount:amount(f.amount),date:now()},"Перевод записан.");
+    form.elements.amount.value="";
   });
 };
 $("expense").onsubmit=event=>{
   event.preventDefault();
-  attempt(()=>{
-    const f=fields(event.currentTarget);
-    commit({type:"expense",bucket:f.bucket,amount:amount(f.amount),date:f.date,note:f.note.trim()},"Расход записан.");
-    event.currentTarget.elements.amount.value="";
-    event.currentTarget.elements.note.value="";
+  const form=event.currentTarget;
+  attempt(async()=>{
+    const f=fields(form);
+    await commit({type:"expense",bucket:f.bucket,amount:amount(f.amount),date:f.date,note:f.note.trim()},"Расход записан.");
+    form.elements.amount.value="";
+    form.elements.note.value="";
   });
 };
 $("rules").onsubmit=event=>{
   event.preventDefault();
-  attempt(()=>{
-    const f=fields(event.currentTarget);
-    commit({type:"rules",first:f.first,rate:Number(f.rate),horizon:Number(f.horizon)},"Правила сохранены для следующих поступлений.");
+  const form=event.currentTarget;
+  attempt(async()=>{
+    const f=fields(form);
+    await commit({type:"rules",first:f.first,rate:Number(f.rate),horizon:Number(f.horizon)},"Правила сохранены для следующих поступлений.");
   });
 };
-$("undo").onclick=()=>attempt(()=>{
-  if(data.events.length && !(data.events.length===1 && data.events[0].id==="opening-xbet") && confirm("Отменить последнюю запись, включая её влияние на остатки и ожидания?")){
-    save({...data,events:data.events.slice(0,-1)});
+$("undo").onclick=()=>attempt(async()=>{
+  if(data.events.length && !(data.events.length===1 && data.events[0].id?.startsWith("opening-")) && confirm("Отменить последнюю запись, включая её влияние на остатки и ожидания?")){
+    await save({...data,events:data.events.slice(0,-1)});
     status("Последняя запись отменена.");
   }
 });
-$("export").onclick=()=>attempt(()=>{
+$("export").onclick=()=>attempt(async()=>{
   check(!loadError,"Данные браузера не прочитаны.");
   const url=URL.createObjectURL(new Blob([JSON.stringify({...data,base:data.base||{cash:0,reserve:0}},null,2)],{type:"application/json"}));
   const link=document.createElement("a");
@@ -407,16 +452,17 @@ $("import").onclick=async()=>{
     if(imported?.version===1 && !imported.base && Array.isArray(imported.events)){
       check(false,"В старой программе нажмите «Копия для Telegram» и выберите скачанный файл.");
     }
-    replay(imported);
+    replay(imported); state=replay(data);
     if(confirm("Заменить текущие записи и настройки содержимым копии?")){
-      save(imported,true);
+      await save(imported,true);
       $("file").value="";
       status("Данные восстановлены.");
     }
-  }catch(error){status(error.message,true);}
+  }catch(error){state=replay(data);status(error.message,true);}
 };
 for (const type of ["income","expense"]) {
   $("quick-"+type).onclick=()=>{
+    for(const panel of ["income","expense"]) $(panel+"-panel").hidden=panel!==type;
     const input=$(type).elements.amount;
     input.scrollIntoView({block:"center"});
     input.focus({preventScroll:true});
@@ -427,12 +473,31 @@ $("quick-journal").onclick=()=>{
   $("journal-panel").scrollIntoView({block:"start"});
 };
 addEventListener("storage",event=>{
-  if(event.key===KEY||event.key===null) location.reload();
+  if(!userId && (event.key===KEY||event.key===null)) location.reload();
 });
-render();
-if(loadError) status("Данные браузера не прочитаны. Можно восстановить их из копии.",true);
+async function start(){
+  $("account").textContent=cloud?"Загружаем записи Telegram…":"Локальный режим браузера. Для синхронизации откройте Mini App из Telegram.";
+  try{
+    if(cloud){
+      const remote=await readCloud();
+      state=replay(remote.data);
+      data=remote.data;
+      cloudVersion=remote.raw;
+      $("account").textContent="Записи этого аккаунта сохраняются в Telegram.";
+    }
+    if(userId && !cloud) throw Error("Обновите Telegram для синхронизации.");
+    ready=true;
+  }catch(error){status(error.message,true);}
+  render();
+  if(loadError) status("Данные браузера не прочитаны. Можно восстановить их из копии.",true);
+}
+start();
 </script>
 </html>
+
+
+
+
 
 
 
